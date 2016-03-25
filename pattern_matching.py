@@ -2,7 +2,7 @@
 def match(v):
     return pattern_matching(v)
 
-def myempty(*h):
+def empty(*h):
     return h[0] is None
 
 

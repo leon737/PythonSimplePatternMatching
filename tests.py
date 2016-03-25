@@ -1,5 +1,5 @@
 import unittest
-from pattern_matching import match, myempty
+from pattern_matching import match, empty
 
 class PatternMatchingTests(unittest.TestCase):
 
@@ -30,7 +30,7 @@ class PatternMatchingTests(unittest.TestCase):
             return (match(x) \
             | (lambda h, t: h % 2 == 0, lambda h, t: sum_even(t, a + h))
             | ((), lambda h, t: sum_even(t, a))
-            | (myempty, a))()
+            | (empty, a))()
 
         print(sum_even(n, 0))
 
