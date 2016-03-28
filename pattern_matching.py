@@ -1,5 +1,4 @@
-
-def match(v):
+def match(v=None):
     return pattern_matching(v)
 
 def empty(*h):
@@ -8,52 +7,67 @@ def empty(*h):
 
 class pattern_matching:
 
-    def __init__(self, v):
+    def __init__(self, v=None):
         self.v = v
-        self.matched = False
+        self.patterns = []
 
     def __or__(self, other):
-        if self.matched: return self
-        if isinstance(other, tuple):
-            if type(self.v) == type(other[0]) and self.v == other[0]:
-                self.set(other[1])
-            if callable(other[0]):
-                p = self.parse_list()
-                try:
-                    if other[0](*p):
-                        self.set(other[1])
-                except:
-                    pass
-            if isinstance(other[0], tuple) and len(other[0]) == 0:
-                self.set(other[1])
+        self.patterns.append(other)
         return self
 
-    def set(self, f):
+    def do(self, v):
+        for p in self.patterns:
+            if isinstance(p, tuple):
+                if self._check_simple(p[0], v):
+                    return self._set(p[1], v)
+                if callable(p[0]):
+                    f = self._parse_list(v)
+                    try:
+                        if p[0](*f):
+                            return self._set(p[1], v)
+                    except:
+                        pass
+                if isinstance(p[0], tuple) and len(p[0]) == 0:
+                    return self._set(p[1], v)
+        return None
+
+    def _check_simple(self, p, v):
+        if isinstance(p, list):
+            return self._any(lambda x: self._check_simple(x, v), p)
+        if (type(p) == type and type(v) == p) or (type(self.v) == type(p) and v == p):
+            return True
+
+        return False
+
+    def _set(self, f, v):
         if callable(f):
-            if isinstance(self.v, list):
-                if len(self.v) > 0:
-                    self.v = f(self.v[0] if len(self.v) > 0 else None, self.v[1:] if len(self.v) > 1 else [])
+            if isinstance(v, list):
+                if len(v) > 0:
+                    return f(self.v[0] if len(self.v) > 0 else None, self.v[1:] if len(self.v) > 1 else [])
                 else:
-                    return
+                    return None
             else:
-                self.v = f(self.v)
+                return f(self.v)
         else:
-            self.v = f
-        self.matched = True
+            return f
 
-    def parse_list(self):
-        if isinstance(self.v, list):
-            if len(self.v) == 0:
+    def _parse_list(self, v):
+        if isinstance(v, list):
+            if len(v) == 0:
                 return [None, None]
-            elif len(self.v) == 1:
-                return (self.v[0], [])
+            elif len(v) == 1:
+                return (v[0], [])
             else:
-                return (self.v[0], self.v[1:])
+                return (v[0], v[1:])
         else:
-            return self.v
+            return (v,)
 
-    def __str__(self):
-        return str(self.v) if self.matched else str(None)
+    def _any(self, p, l):
+        for x in l:
+            if p(x):
+                return True
+        return False
 
     def __call__(self, *args, **kwargs):
-        return self.v if self.matched else None
+        if len(args) > 0: self.v = args[0]
+        return self.do(self.v)
